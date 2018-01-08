@@ -1,0 +1,1107 @@
+var selfActive = (function(){
+  $(document).on('click', '.js-active', function(e){
+    var target = $(e.target);
+    target.closest('.js-active-block').find('.js-active').removeClass('active');
+    target.closest('.js-active').toggleClass('active');
+  })
+})();
+
+var targetActive = (function(){
+  $(document).on('click', '.js-target-active', function(e){
+    var target = $($(this).data('target-active'));
+    $('.js-active-block').find('.js-active').removeClass('active');
+    target.toggleClass('active');
+  })
+})();
+
+var simpleToggle = (function(){
+  $(document).on('click', '.js-simple-toggle', function(e){
+    var source = $(this),
+        target = $(source.data('target'));
+        var targetSlide = $(source.data('slide'));
+        if (targetSlide[0]) {
+          if (target.hasClass('active')) {
+            target.slideUp(300)
+          } else {
+            target.slideDown(300)
+          }
+        }
+    target.toggleClass('active');
+  })
+})();
+
+var modalWindowsToggle = (function() {
+  $(document).on('click', '.js-open-modal', function(e){
+    e.preventDefault();
+    var targetModal = '#' + $(e.target).data('target');
+    $(targetModal).show().addClass('modal-active');
+    setTimeout(function() {
+      $('html').css('overflow', 'hidden');
+      //костыль из-за отваливания хедера
+      $(targetModal).find('.mixer-channels__header').css('position', 'relative');
+
+      setTimeout(function () {
+        $(targetModal).find('.mixer-channels__header').css('position', 'sticky');
+      }, 200)
+    }, 500);
+    if(targetModal == '#modal-scorer') {
+       setTimeout(alignScorerColumns, 200);
+     }
+    // if(targetModal == '#modal-scorer') {
+    //   setTimeout(alignScorerColumns, 500);
+    //   $(targetModal).find('.scorer__footer').css('position', 'relative');
+    //   setTimeout(function () {
+    //     $(targetModal).find('.scorer__footer').css({'position': 'sticky', 'bottom': '0'});
+    //   }, 300)
+    // }
+  });
+  $(document).on('click', '.js-close-modal', closeEventHandler);
+  document.onkeydown = function(e) {
+      e = e || window.event;
+      var isEscape = false;
+      if ("key" in e) {
+          isEscape = (e.key == "Escape" || e.key == "Esc");
+      } else {
+          isEscape = (e.keyCode == 27);
+      }
+      if (isEscape) {
+          if($('.submodal').hasClass('modal-active')) {
+            closeSubModal('.submodal');
+            return;
+          }
+          closeEventHandler(e);
+      }
+  };
+
+  function closeEventHandler(e) {
+    e.preventDefault();
+    if($(e.target).data('close-target')) {
+      closeSubModal($(e.target).data('close-target'));
+      return;
+    }
+    var target = $(e.target).parents('.submodal');
+    if(target.hasClass('modal-active')) {
+      closeSubModal(target);
+    } else {
+      closeAllModals(e);
+    }
+  }
+
+  function closeSubModal(target){
+    $(target).removeClass('modal-active');
+    setTimeout(function(){
+      $(target).hide();
+      $('html').css('overflow', 'auto');
+      $('.burger__scroller').hide();
+    }, 300)
+  }
+})();
+
+function closeAllModals(e){
+  if(e) {
+    e.preventDefault();
+  }
+  $('.modal').removeClass('modal-active');
+  setTimeout(function(){
+    $('.modal').hide();
+    $('html').css('overflow', 'auto');
+    $('.burger__scroller').hide();
+  }, 300)
+}
+
+var activeToggle = (function(){
+  var togglers = {
+    'js-toggle-cities': ['js-cities'],
+    'js-toggle-director': ['js-form-director', 'fastform', 'single'],
+    'js-toggle-callback': ['js-form-callback', 'fastform', 'single'],
+    'js-toggle-connect': ['js-form-connect', 'fastform', 'single'],
+    'js-toggle-offices': ['js-form-offices', 'fastform', 'single'],
+    'js-toggle-offices-nav': ['js-form-offices', 'generic', 'single'],
+    'js-toggle-phone-footer': ['js-form-callback', 'generic', 'single'],
+  },
+  timeout = 500,
+  singleActive = false;
+  Object.keys(togglers).forEach(function(key) {
+    var toggleList = document.getElementsByClassName(key),
+        toggleTarget = document.getElementsByClassName(togglers[key][0])[0];
+    for (var i = 0; i < toggleList.length; i++) {
+      toggleList[i].addEventListener('click', function(e){
+        e.preventDefault();
+        closeSingleTargets(togglers[key][0], timeout);
+        $(e.target).parents('.fast_menu').removeClass('fixed');
+        if(toggleTarget.classList.contains('active')) {
+          toggleTarget.classList.add('hiding');
+          if (togglers[key][1] == 'fastform') {
+            $(e.target).parent().goTo(-300);
+          }
+          setTimeout(function(){
+           toggleTarget.classList.remove('hiding', 'active');
+          }, timeout);
+        } else {
+          toggleTarget.classList.add('active');
+          singleActive = true;
+          if (togglers[key][1] == 'fastform') {
+            $(e.target).parents('.fast_menu').goTo(-Math.abs($('.nav_bottom.sticky').height()));
+          }
+        }
+      })
+    }
+  });
+
+  function closeSingleTargets(exception, timeout) {
+    Object.keys(togglers).forEach(function(key) {
+      var target = togglers[key];
+      if (target[2] == 'single' && target[0] != exception) {
+        var toggleTarget = document.getElementsByClassName(target[0])[0];
+        if ((typeof toggleTarget != 'undefined') && toggleTarget.classList.contains('active')) {
+          toggleTarget.classList.add('hiding');
+          setTimeout(function(){
+           toggleTarget.classList.remove('hiding', 'active');
+          }, timeout);
+        }
+      }
+    })
+  }
+})();
+
+var paymentsColorize = (function() {
+  var paymentInputs = $('input:radio[name="group1"]');
+  paymentInputs.change(function() {
+    paymentInputs.siblings('.js-color-filter').css('filter', 'opacity(0.7) grayscale(100%)');
+    if ($(this).is(':checked')) {
+      $(this).siblings('.js-color-filter').css('filter', 'opacity(1) grayscale(0%)')
+    }
+  });
+})();
+
+$('.js-hs-trigger').click(function(e) {
+  var trigger = $(e.target),
+      target = trigger.data('sh-target');
+      console.log(target);
+  if(trigger.data('sh-action') == 'hide') {
+    $(target).hide();
+  } else {
+    $(target).show();
+  }
+});
+
+//Scroller
+(function($) {
+    $.fn.goTo = function(correction, speed, root) {
+      root = typeof root !== 'undefined' ?  root : 'html, body';
+      correction = correction !== correction ? 0 : correction;
+      correction = typeof correction !== 'undefined' ?  correction : 0;
+        $(root).animate({
+            scrollTop: $(this).offset().top + correction + 'px'
+        }, speed);
+        return this;
+    }
+})(jQuery);
+
+function flipScroller(scroller) {
+  scroller.siblings('.scroller').show(5, function() {
+    $(this).addClass('active');
+    animateScroller($(this));
+  })
+  scroller.hide().removeClass('active');
+}
+
+function animateScroller(scroller) {
+    scroller.animate({marginBottom: '10px'}, 150);
+    scroller.animate({marginBottom: '0px'}, 150);
+    scroller.animate({marginBottom: '10px'}, 150);
+    scroller.animate({marginBottom: '0px'}, 150);
+}
+
+function checkPhone (phone) {
+    if(/\([7,8,9]/g.test(phone) == false) {
+      alert('Неверный формат номера телефона');
+      return false;
+    }
+    return /[\+\(]{0,2}\d{1,4}[\.\-\s\(\)]*\d{1}[\.\-\s\(\)]*\d{1}[\.\-\s\(\)]*\d{1}[\.\-\s\(\)]*\d{1}[\.\-\s\(\)]*\d{1}[\.\-\s\(\)]*\d{1}[\.\-\s\(\)]*\d{1}[\.\-\s\(\)]*\d{1}[\.\-\s\(\)]*\d{1}[\.\-\s\(\)]*\d{1}/g.test(phone);
+}
+
+function checkEmail (email) {
+  return /^[a-zA-Z0-9\.]+@[a-zA-Z0-9]+(\-)?[a-zA-Z0-9]+(\.)?[a-zA-Z0-9]{2,6}?\.[a-zA-Z]{2,6}$/.test(email);
+}
+
+function checkFormCompleted (form) {
+  var elements = form[0].elements;
+  for (var i = 0, element; element = elements[i++];) {
+    if ((element.type == "text" || element.type == "textarea" || element.type =="tel") && element.value === "" && !(element.classList.contains('optional'))) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function validateForm(form, validators) {
+  var elements = form[0].elements;
+  for (var i = 0, element; element = elements[i++];) {
+    if(validators.hasOwnProperty(element.name)) {
+      if(validators[element.name](element.value)) {
+        return 'valid';
+      } else {
+        return element.name;
+      }
+    }
+  }
+  return 'valid';
+}
+
+function collectForm (form) {
+  var data = {},
+      elements = form[0].elements;
+  for (var i = 0, element; element = elements[i++];) {
+    if(element.type !== "button") {
+      if(element.type == "checkbox") {
+        data[element.name] = element.checked;
+      } else {
+        data[element.name] = element.value;
+      }
+    }
+    data['department'] = event.target.dataset.department;
+  }
+  if(simpleChoose.tariff) {
+    data['tariff'] = simpleChoose.tariff;
+  }
+  data['pageUrl'] = window.location.href;
+  return data;
+}
+
+function sendForm (data, url, form) {
+  $.ajax({
+    url: url,
+    method: "POST",
+    data: data,
+    success: function(data) {
+      displayFormSuccess(data, form);
+    },
+    error: function(object, textStatus, errorThrown) {
+      displayFormError(errorThrown, form);
+    }
+  });
+}
+
+function displayFormSuccess(data, form) {
+  form.hide();
+  $(form.data('message')).show();
+  //setTimeout(5000, closeAllModals());
+}
+
+function displayFormError(errorThrown, form) {
+  var errorMsg = '<p>При отправке формы возникла ошибка: '+ errorThrown +' </p>';
+  form.hide();
+  $(form.data('message')).show().html(errorMsg);
+}
+
+
+//Sticky nav
+$(function() {
+  var navTop = $('.nav_top'),
+      navBottom = $('.nav_bottom'),
+      offsetTopReturn;
+  $(window).on('scroll', function(){
+    var offsetTop = navTop.offset().top + navTop.height(),
+        scrollAmount = $(this).scrollTop();
+    if(scrollAmount >= offsetTop && !(navBottom.hasClass('sticky'))) {
+      offsetTopReturn = offsetTop;
+      navBottom.addClass('sticky');
+      $('body').css('padding-top', navBottom.height())
+    } else if (scrollAmount <= offsetTopReturn && navBottom.hasClass('sticky')) {
+      $('body').css('padding-top', 0);
+      navBottom.removeClass('sticky');
+    }
+  })
+});
+
+//Sticky fast_menu
+$(function() {
+  var fastMenu = $('.fast_menu'),
+      footerOffset = $('.footer').offset().top +55;
+  $(window).on('scroll', function(){
+    var windowScroll = $(window).scrollTop() + $(window).height();
+    if (windowScroll >= footerOffset) {
+      if(fastMenu.hasClass('fixed')) {
+        fastMenu.removeClass('fixed')
+      }
+      $('.subcart').addClass('stopped')
+    } else {
+      if(!fastMenu.hasClass('fixed')) {
+        fastMenu.addClass('fixed')
+      }
+      $('.subcart').removeClass('stopped')
+    }
+  })
+});
+
+//Particular events
+$('.icon_burger').click(function(){
+  $('#navigation').goTo();
+  setTimeout(function(){
+    if($('.burger').height() > $(window).height()) {
+      var scroller = $('.burger__scroller.down');
+      $('.burger__scroller.down').show();
+      animateScroller(scroller);
+    }
+  }, 800);
+});
+
+$('.scroller').click(function(){
+  var scroller = $(this),
+      time = 500;
+  var destination = typeof scroller.data('dest') !== 'undefined' ?  $(scroller.data('dest')) : scroller;
+  destination.goTo(scroller.data('position'), time, scroller.data('target'));
+  setTimeout(function(){
+      var screenHeight = window.screen.availHeight;
+      if($(scroller.data('target')).scrollTop() == 0) {
+        flipScroller(scroller);
+      }
+      if(window.screen.availWidth > 992) {
+        if(Math.floor($(scroller.data('whole')).height() - $(scroller.data('target')).scrollTop()) <= screenHeight) {
+          flipScroller(scroller);
+        }
+      }
+    }, time);
+});
+
+$('#burger').on('scroll', function(){
+  if($(this).scrollTop() == 0) {
+    flipScroller($(this).parent().find('.scroller.back'));
+  }
+});
+
+$('.js-toggle-offices-nav').click(function() {
+  $('.fast_menu').goTo(0, 1000)
+});
+
+$('.js-toggle-phone-footer').click(function(e) {
+  e.preventDefault();
+  $('.fast_menu').goTo((-1*$('.nav_bottom').height()), 1000)
+});
+
+$('.fast_forms__form__light-input, .fast_forms__form__full-input').click(function() {
+  $(this).addClass('active').removeClass('error-empty');
+});
+
+$('.js-send-form:not(.p-invite__form)').click(function(e) {
+  e.preventDefault();
+  if(e.target.classList.contains('button-disabled')) {
+    return;
+  }
+  var thisForm = $(this).parents('form'),
+      valResult = validateForm(thisForm, {'email':checkEmail, 'phone':checkPhone});
+  if(valResult === 'valid') {
+    sendForm(collectForm(thisForm), thisForm.data('send'), thisForm);
+  } else {
+    if(valResult == 'phone') {
+      thisForm.find('#wrong-phone').show();
+    } else if (valResult == 'email') {
+      thisForm.find('#wrong-email').show();
+    }
+  }
+});
+
+$('.fast_forms__form__light-input, .fast_forms__form__full-input').on('blur input', function(e) {
+  var element = $(this),
+    thisForm = element.parents('form'),
+    thisButton = thisForm.find('.button-green');
+  if (e.type == 'input') {
+    thisForm.find('#wrong-phone, #wrong-email').hide();
+  }
+  if (element.val() == '' && !(element.hasClass('optional'))) {
+    element.removeClass('active not-empty').addClass('error-empty');
+  } else {
+    element.removeClass('error-empty').addClass('not-empty');
+    if(e.type == 'input') {
+      element.addClass('active');
+    }
+  }
+  if (element.val() == '' && e.type == 'blur' && element.hasClass('optional')) {
+    element.removeClass('active');
+  }
+  if(checkFormCompleted(thisForm)) {
+    thisButton.removeClass('button-disabled');
+  } else {
+    thisButton.addClass('button-disabled');
+  }
+});
+
+$(window).on('resize', function() {
+  if($('.burger').height() < $(window).height()) {
+    $('.burger__scroller').hide();
+  }
+  alignSecondFList();
+  alignScorerColumns()
+});
+
+//Validators and masks
+$(function() {
+  $(".masked-phone").inputmask("+7(999)999-99-99");
+  $(".masked-phone-confirm").inputmask("+7(999)999-99-99");
+})
+
+//Костыли
+function alignSecondFList(){
+  $(".footer__list:eq(2)").height($(".footer__list:eq(1)").height()+50);
+}
+
+//Некоторые инициализации
+$(function() {
+  alignSecondFList();
+})
+
+//Оформление конфигуратора (scorer)
+  function alignScorerColumns() {
+    var sample_1 = $('.col-sample-1').width(),
+        sample_2 = $('.col-sample-2').width(),
+        sample_3 = $('.col-sample-3').width(),
+        sample_4 = $('.col-sample-4').width(),
+        sample_5 = $('.col-sample-5').width(),
+        sample_6 = $('.col-sample-6').width();
+
+        $('.scorer__row td:first-child').width(sample_1);
+        $('.scorer__row td:nth-child(2)').width(sample_2);
+        $('.scorer__row td:nth-child(3)').width(sample_3);
+        $('.scorer__row td:nth-child(4)').width(sample_4);
+        $('.scorer__row td:nth-child(5)').width(sample_5);
+        $('.scorer__row td:nth-child(6)').width(sample_6);
+  }
+
+//Логика простого объекта для лицевых форм
+var simpleChoose = {};
+$('.js-simple-change').click(function(e) {
+  var target = $(e.currentTarget);
+  simpleChoose.tariff = target.data('simple');
+  console.log(simpleChoose);
+})
+
+//Логика конфигуратора (scorer)
+var options = JSON.parse(sessionStorage.getItem('scorer_options'));
+if (!options) {
+  options = {
+    tariff: {
+      name: '',
+      type: '',
+      speed: '',
+      price_m: 0,
+    },
+    bundles: [],
+    addition: [],
+    total_m: 0,
+    total_o: 0
+  }
+}
+
+function tariffScorer() {
+  var self = this;
+  this.init = function(options) {
+    this.options = options;
+    this.updateCart();
+  }
+  this.updateCart = function() {
+    var cart = '', bundles = '', addition = '', count = 0;
+    if (this.options.bundles.length > 0) {
+      for(var i=0; i<this.options.bundles.length; i++) {
+        bundles += ' + ' + this.options.bundles[i].name
+        count ++;
+      }
+      $('.js-subcart-goods').html('');
+    }
+    if (this.options.addition.length > 0) {
+      for(var i=0; i<this.options.addition.length; i++) {
+        if (this.options.addition[i].qty > 0) {
+          addition += ' + ' + this.options.addition[i].name + ' (' + this.options.addition[i].qty + ' шт.)'
+        } else {
+          addition += ' + ' + this.options.addition[i].name
+        }
+        count ++;
+      }
+      $('.js-subcart-goods').html('');
+    }
+    if(this.options.tariff.name !== '') {
+      count ++;
+    }
+    if(this.options.tariff.name.indexOf('Миксер') !== -1) {
+      $('.only-tv').show();
+    } else {
+      $('.only-tv').hide();
+    }
+    cart = '<strong>' + this.options.tariff.type + '</strong> ' + this.options.tariff.name + bundles + addition;
+    $('.js-scorer-goods').html(cart);
+    if(this.options.tariff.name != '') {
+      $('.js-subcart-goods').html(this.options.tariff.name);
+    }
+    $('.scorer__footer-carticon__count').text(count);
+    $('.subcart-carticon__count').text(count);
+    if(count>0) {
+      $('.subcart').removeClass('inactive');
+    } else {
+      $('.subcart').addClass('inactive');
+    }
+    this.calcTotal();
+    this.updateRows();
+    sessionStorage.setItem('scorer_options', JSON.stringify(this.options));
+  }
+  this.updateRows = function() {
+    $('.scorer__row, .internet__choose-type, .mixer__choose-type, .hor-option, .internet__add-unique, .mixer__add-unique, .js-scorer-row').removeClass('added');
+
+    this.options.bundles.map(function(bundle) {
+      $('.scorer__row[data-name="' + bundle.name + '"]').addClass('added');
+      $('.js-scorer-row[data-name="' + bundle.name + '"]').addClass('added');
+      // Втащить сюда обновления пакетов на странице и выпилить дублирующую логику с button-bundle-to-scorer
+    })
+    this.options.addition.map(function(addition) {
+      $('.scorer__row[data-name="' + addition.name + '"]').addClass('added');
+      $('.hor-option[data-name="' + addition.name + '"]').addClass('added');
+      $('.internet__add-unique[data-name="' + addition.name + '"]').addClass('added');
+      $('.mixer__add-unique[data-name="' + addition.name + '"]').addClass('added');
+    })
+    $('.scorer__row[data-name="' +  this.options.tariff.name + '"]').addClass('added');
+    $('.internet__choose-type[data-name="' +  this.options.tariff.name + '"]').addClass('added');
+    $('.mixer__choose-type[data-name="' +  this.options.tariff.name + '"]').addClass('added');
+  }
+
+  this.calcTotal = function() {
+    this.options.total_m = this.options.tariff.price_m +
+    this.options.bundles.reduce(function(prev, curr){
+      return prev + curr.price_m;
+    }, 0) +
+    this.options.addition.reduce(function(prev, curr){
+      if (curr.qty > 0) {
+        return prev + curr.price_m*curr.qty;
+      }
+      return prev + curr.price_m;
+    }, 0);
+    this.options.total_o = this.options.addition.reduce(function(prev, curr){
+      return prev + curr.price_o;
+    }, 0);
+    $('.js-scorer-total-m').text(this.options.total_m);
+    if (this.options.total_o > 0) {
+      $('.js-scorer-total-o').html('+ ' +this.options.total_o + "<svg viewBox='0 0 24 24' class='table__price-rouble rouble'><use xlink:href='#rouble-sign'></use></svg>");
+    } else {
+      $('.js-scorer-total-o').html('');
+    }
+  }
+  this.setTariff = function(tariff) {
+    this.options.tariff = tariff;
+    this.updateCart();
+  }
+  this.addBundle = function(bundle) {
+    this.options.bundles.push(bundle);
+    this.updateCart();
+  }
+  this.removeBundle = function(name) {
+    this.options.bundles = this.options.bundles.filter(function(item){
+      return item.name !== name;
+    });
+    this.updateCart();
+  }
+  this.addAllBundles = function() {
+    var allBundles = $('.scorer__block-bundle').find('.js-scorer-row');
+    $.each(allBundles, function(index, value){
+      self.addBundle({
+        name: $(value).data('name'),
+        price_m: $(value).data('price-m')
+      });
+    });
+    allBundles.addClass('added');
+    this.updateCart();
+  }
+  this.removeAllBundles = function() {
+    var allBundles = $('.scorer__block-bundle').find('.js-scorer-row');
+    this.options.bundles = [];
+    allBundles.removeClass('added');
+    this.updateCart();
+  }
+  this.addAddition = function(addition) {
+    this.options.addition.push(addition);
+    this.updateCart();
+  }
+  this.increaseAddition = function(addition) {
+    this.options.addition.map(function(item){
+      if (item.name == addition) {
+        item.qty = item.qty+1;
+      }
+    });
+    this.updateCart();
+  }
+  this.decreaseAddition = function(addition) {
+    this.options.addition.map(function(item){
+      if (item.name == addition) {
+        item.qty = item.qty-1;
+      }
+    });
+    this.updateCart();
+  }
+  this.removeAddition = function(name) {
+    this.options.addition = this.options.addition.filter(function(item){
+      return item.name !== name;
+    });
+    this.updateCart();
+  }
+  this.includeElements = function(elements) {
+    var target;
+    var that = this;
+    elements.map(function(element){
+      that.addBundle(element);
+      target = $('.js-scorer-row[data-name="' + element.name + '"]');
+      target.find('.scorer__check').hide();
+      target.find('.included').show();
+      target.addClass('included');
+    });
+    this.updateCart();
+  }
+  this.excludeElements = function(elements) {
+    var target;
+    var that = this;
+    elements.map(function(element){
+      that.removeBundle(element.name);
+      target = $('.js-scorer-row[data-name="' + element.name + '"]');
+      target.find('.scorer__check').show();
+      target.find('.included').hide();
+      target.removeClass('included');
+    });
+    this.updateCart();
+  }
+}
+
+function includeFreeRouter() {
+  $('.js-including-router').find('.scorer__check').hide();
+  $('.js-including-router').find('.included').show();
+  $('.js-scorer-addition-info').show()
+}
+
+function excludeFreeRouter() {
+  $('.js-including-router').find('.scorer__check').show();
+  $('.js-including-router').find('.included').hide();
+  $('.js-scorer-addition-info').hide();
+}
+
+function multiplyMediac(qty) {
+  $('.js-mediac-qty').text(qty);
+  $('.js-scorer-mediac').text('Медиацентр HD - ' + qty + ' штуки');
+  $('.js-scorer-mediac-add').text('(ТВ-приставки для двух телевизоров)');
+  $('.js-scorer-mediac-info').show().text(' + ' + qty + ' Медиацентра HD бесплатно');
+}
+
+function singleMediac() {
+  $('.js-mediac-qty').text('');
+  $('.js-scorer-mediac').text('Медиацентр HD');
+  $('.js-scorer-mediac-add').text('(ТВ-приставка)');
+  $('.js-scorer-mediac-info').show().text(' + Медиацентр HD бесплатно');
+}
+
+//инициализируем конфигуратор и делегируем события для разных частей:
+var universalScorer = new tariffScorer();
+universalScorer.init(options);
+
+$('.scorer__block-mixer, .scorer__block-web, .button-to-scorer').click(function(e){
+  var target = $(e.target);
+  if(!target.hasClass('js-scorer-trigger')) return;
+  var row = target.closest('.js-scorer-row');
+  if (row.hasClass('js-include-router')) {
+    includeFreeRouter();
+  } else {
+    excludeFreeRouter();
+  }
+  if(row.hasClass('js-multiple-mediac')) {
+    multiplyMediac(row.data('mediac'));
+  } else {
+    if(!row.hasClass('js-exclude-mediac')) {
+      singleMediac();
+    }
+  }
+  if (row.hasClass('added')) return;
+  $('.scorer__block-mixer, .scorer__block-web').find('.js-scorer-row').removeClass('added');
+  row.addClass('added');
+  universalScorer.setTariff({
+    name: row.data('name'),
+    type: row.data('type'),
+    speed: row.data('speed'),
+    price_m: row.data('price-m') || 0
+  })
+
+  //Включенные пакеты:
+  if(row.data('name') == 'Миксер HD Премиум-бокс') {
+    var cityName = $('#city-name')[0].innerText,
+      noNastroyKino = ['Уфа', 'Белорецк', 'Нефтекамск'];
+    console.log(cityName);
+    console.log(noNastroyKino.includes(cityName));
+    if(noNastroyKino.includes(cityName)) {
+      var includeArray = [
+        {name: 'Футбол премиум HD', price_m: 0},
+        {name: 'Наш футбол HD', price_m: 0},
+        {name: 'Amedia Premium HD', price_m: 0},
+        {name: 'Телеканал Дождь', price_m: 0},
+        {name: 'Ночной', price_m: 0},
+      ];
+    } else {
+      var includeArray = [
+        {name: 'Настрой кино!', price_m: 0},
+        {name: 'Футбол премиум HD', price_m: 0},
+        {name: 'Наш футбол HD', price_m: 0},
+        {name: 'Amedia Premium HD', price_m: 0},
+        {name: 'Телеканал Дождь', price_m: 0},
+        {name: 'Ночной', price_m: 0},
+      ];
+    }
+    $('.only-tv').show();
+    console.log(includeArray);
+    universalScorer.excludeElements([
+      {name: 'Настрой кино!', price_m: 0},
+      {name: 'Футбол премиум HD', price_m: 0},
+      {name: 'Наш футбол HD', price_m: 0},
+      {name: 'Amedia Premium HD', price_m: 0},
+      {name: 'Телеканал Дождь', price_m: 0},
+      {name: 'Ночной', price_m: 0},
+    ])
+    universalScorer.includeElements(includeArray)
+  } else if (row.data('name') == 'Миксер HD Максимум') {
+    $('.only-tv').show();
+    universalScorer.excludeElements([
+      {name: 'Настрой кино!', price_m: 0},
+      {name: 'Футбол премиум HD', price_m: 0},
+      {name: 'Наш футбол HD', price_m: 0},
+      {name: 'Amedia Premium HD', price_m: 0},
+      {name: 'Телеканал Дождь', price_m: 0},
+      {name: 'Ночной', price_m: 0},
+    ])
+  } else if (row.data('name') == 'Миксер HD Мультирум') {
+    $('.only-tv').show();
+    universalScorer.excludeElements([
+      {name: 'Настрой кино!', price_m: 0},
+      {name: 'Футбол премиум HD', price_m: 0},
+      {name: 'Наш футбол HD', price_m: 0},
+      {name: 'Amedia Premium HD', price_m: 0},
+      {name: 'Телеканал Дождь', price_m: 0},
+      {name: 'Ночной', price_m: 0},
+    ])
+  } else if (row.data('name') == 'Миксер HD Популярный') {
+    $('.only-tv').show();
+    universalScorer.excludeElements([
+      {name: 'Настрой кино!', price_m: 0},
+      {name: 'Футбол премиум HD', price_m: 0},
+      {name: 'Наш футбол HD', price_m: 0},
+      {name: 'Amedia Premium HD', price_m: 0},
+      {name: 'Телеканал Дождь', price_m: 0},
+      {name: 'Ночной', price_m: 0},
+    ])
+  } else if (row.data('name') == 'Миксер HD Лайт') {
+    $('.only-tv').show();
+    universalScorer.excludeElements([
+      {name: 'Настрой кино!', price_m: 0},
+      {name: 'Футбол премиум HD', price_m: 0},
+      {name: 'Наш футбол HD', price_m: 0},
+      {name: 'Amedia Premium HD', price_m: 0},
+      {name: 'Телеканал Дождь', price_m: 0},
+      {name: 'Ночной', price_m: 0},
+    ])
+  } else if ((row.data('name') == 'Ньютон')||(row.data('name') == 'Честный')||(row.data('name') == 'Просто Интернет')) {
+    $('.only-tv').hide();
+    $('.js-scorer-mediac-info').hide();
+    universalScorer.excludeElements([
+      {name: 'Настрой кино!', price_m: 0},
+      {name: 'Футбол премиум HD', price_m: 0},
+      {name: 'Наш футбол HD', price_m: 0},
+      {name: 'Amedia Premium HD', price_m: 0},
+      {name: 'Телеканал Дождь', price_m: 0},
+      {name: 'Ночной', price_m: 0},
+    ])
+  } else if ((row.data('name') == 'Эйнштейн')||(row.data('name') == 'Твой')||(row.data('name') == 'Удобный Интернет')) {
+    $('.only-tv').hide();
+    $('.js-scorer-mediac-info').hide();
+    universalScorer.excludeElements([
+      {name: 'Настрой кино!', price_m: 0},
+      {name: 'Футбол премиум HD', price_m: 0},
+      {name: 'Наш футбол HD', price_m: 0},
+      {name: 'Amedia Premium HD', price_m: 0},
+      {name: 'Телеканал Дождь', price_m: 0},
+      {name: 'Ночной', price_m: 0},
+    ])
+  } else if ((row.data('name') == 'Тесла')||(row.data('name') == 'Быстрый Интернет')) {
+    $('.only-tv').hide();
+    $('.js-scorer-mediac-info').hide();
+    universalScorer.excludeElements([
+      {name: 'Настрой кино!', price_m: 0},
+      {name: 'Футбол премиум HD', price_m: 0},
+      {name: 'Наш футбол HD', price_m: 0},
+      {name: 'Amedia Premium HD', price_m: 0},
+      {name: 'Телеканал Дождь', price_m: 0},
+      {name: 'Ночной', price_m: 0},
+    ])
+  }
+})
+
+$('.scorer__block-bundle, .button-bundle-to-scorer').click(function(e){
+  var target = $(e.target);
+  if(!target.hasClass('js-scorer-trigger')) return;
+  var row = target.closest('.js-scorer-row');
+  if(row.hasClass('included')) return;
+  if (row.hasClass('added')) {
+    universalScorer.removeBundle(row.data('name'));
+    row.removeClass('added');
+  } else {
+    universalScorer.addBundle({
+      name: row.data('name'),
+      price_m: row.data('price-m')
+    });
+    row.addClass('added');
+  }
+})
+
+$('.scorer__block-add, .button-add-to-scorer').click(function(e){
+  var target = e.target;
+  if(!(target.classList.contains('js-scorer-trigger') || target.classList.contains('js-scorer-up') || target.classList.contains('js-scorer-down')) || target.classList.contains('js-disabled')) return;
+  var row = $(target).closest('.js-scorer-row');
+  //counter logic
+  if(target.classList.contains('js-scorer-up') || target.classList.contains('js-scorer-down')) {
+    var counter = row.find('.js-scorer-digit'),
+        count = parseInt(counter.text());
+    if (target.classList.contains('js-scorer-up')) {
+      if (count == 0) {
+        counter.html(count+1);
+        universalScorer.addAddition({
+          name: row.data('name'),
+          type: row.data('type'),
+          qty: count+1,
+          price_m: row.data('price-m') || 0,
+          price_o: row.data('price-o') || 0
+        });
+        row.addClass('added');
+      } else {
+        counter.html(count+1);
+        universalScorer.increaseAddition(row.data('name'));
+      }
+    }
+    if (target.classList.contains('js-scorer-down')) {
+      if (count == 0) return;
+      if (count == 1) {
+        counter.html(0);
+        universalScorer.removeAddition(row.data('name'));
+        row.removeClass('added');
+      } else {
+        counter.html(count-1);
+        universalScorer.decreaseAddition(row.data('name'));
+      }
+    }
+    return;
+  }
+  //add logic
+  if (row.hasClass('added')) {
+    universalScorer.removeAddition(row.data('name'));
+    row.removeClass('added');
+  } else {
+    universalScorer.addAddition({
+      name: row.data('name'),
+      type: row.data('type'),
+      price_m: row.data('price-m') || 0,
+      price_o: row.data('price-o') || 0
+    });
+    row.addClass('added');
+  }
+})
+
+$('.js-scorer-update').click(function(e){
+  universalScorer.updateRows();
+})
+
+$('.js-scorer-send').click(function(e){
+  e.preventDefault();
+  var target = $(e.target).closest('.scorer__footer-form');
+  var city = $(target).data('city'),
+      apiName = $(target).data('api'),
+      data = {city: city};
+
+  data.name = target.find('.scorer__footer-form__name').val();
+  data.phone = target.find('.scorer__footer-form__phone').val();
+  $.post('https://api.groupw.ru/'+apiName+'/demands/join/person', {
+    name: data.name,
+    phone: data.phone,
+    city: data.city,
+    comment: JSON.stringify(options)
+  }, function(body) {
+    console.log(body);
+    if (body.statusCode === 200) {
+      $('.scorer__footer-form').removeClass('active')
+      $('.scorer__footer-message').addClass('active').text('Заявка отправлена')
+      console.log('succes form post');
+    } else {
+      $('.scorer__footer-form').removeClass('active')
+      $('.scorer__footer-message').addClass('active').text('Заявка не отправлена')
+      console.log('failed form post');
+    }
+  });
+})
+
+
+//Серение каналов
+function greyChannels(e){
+  ungreyChannels();
+  var target = $(e.currentTarget),
+      bundle = target.data('bundle');
+      if(bundle == 'lite') {
+        $('.enabled-popular').addClass('inactive');
+        $('.enabled-maximum').addClass('inactive');
+        $('.enabled-unique').addClass('inactive');
+        $('.enabled-prembox').addClass('inactive');
+      } else if(bundle == 'popular') {
+        $('.enabled-popular').removeClass('inactive');
+        $('.enabled-maximum').addClass('inactive');
+        $('.enabled-unique').addClass('inactive');
+        $('.enabled-prembox').addClass('inactive');
+      } else if(bundle == 'maximum') {
+        $('.enabled-popular').removeClass('inactive');
+        $('.enabled-maximum').removeClass('inactive');
+        $('.enabled-unique').addClass('inactive');
+        $('.enabled-prembox').addClass('inactive');
+      } else if(bundle == 'unique') {
+        $('.enabled-popular').removeClass('inactive');
+        $('.enabled-maximum').removeClass('inactive');
+        $('.enabled-unique').removeClass('inactive');
+        $('.enabled-prembox').addClass('inactive');
+        if(target.hasClass('tomsk-special')) {
+          $('.mixer-channels__premblock .mixer-channels__list-item').addClass('inactive');
+          $('#amedia_hd, #playboy-tv, #rus_night, #candy, #candy_man').removeClass('inactive');
+        }
+      } else if(bundle == 'prembox') {
+        ungreyChannels();
+      }
+}
+function ungreyChannels(){
+  $('.mixer-channels__list-item').removeClass('inactive')
+}
+function showChannelBlocks(e){
+  $('.js-premblock').removeClass('active').slideUp(200);
+  var target = $(e.currentTarget),
+      block = target.data('show');
+      $(block).addClass('active').slideDown(200);
+}
+
+$('.mixer-channels__header-link, .type__opt-text__main, .js-grey-channels').click(greyChannels)
+$('.mixer-channels__header-link, .type__opt-text__main, .js-grey-channels').click(showChannelBlocks)
+
+$('.scorer__row').hover(
+  function() {
+    $(this).prev().find('div').addClass('transborder');
+    $(this).next().find('div').addClass('transborder');
+  },
+  function() {
+    $(this).prev().find('div').removeClass('transborder');
+    $(this).next().find('div').removeClass('transborder');
+  }
+)
+
+//Появление крестика в конфигураторе
+$('.modal-fixed').on('scroll', function(){
+  if($(this).scrollTop() > 100) {
+    $('.scorer__float-close').show();
+  } else {
+    $('.scorer__float-close').hide();
+  }
+});
+
+$( ".js-nonabon" ).click(function(e) {
+  if($('.js-nonabon-target').prop("checked")) {
+    $('.js-nonabon-target').prop("checked",false)
+    $('.fast_forms__pnum>.fast_forms__form__light-input').removeClass('optional');
+  } else {
+    $('.js-nonabon-target').prop("checked",true)
+    $('.fast_forms__pnum>.fast_forms__form__light-input').addClass('optional').removeClass('error-empty');
+  }
+  $('.fast_forms__form__light-input').trigger('blur');
+});
+
+$('.js-personal-data').click(function(e) {
+  if($('.js-personal-data-target').prop("checked")) {
+    $('.js-personal-data-target').prop("checked",false)
+  } else {
+    $('.js-personal-data-target').prop("checked",true)
+  }
+})
+$('.js-late-call').click(function(e) {
+  if($('.js-late-call-target').prop("checked")) {
+    $('.js-late-call-target').prop("checked",false)
+  } else {
+    $('.js-late-call-target').prop("checked",true)
+  }
+})
+
+$(document).ready(function(){
+  //Slider
+  $('.slider__slick').slick({
+    autoplay: true,
+    autoplaySpeed: 4000,
+    slidesToScroll: 1,
+    swipeToSlide: true,
+    touchThreshold: 40,
+    dots: true,
+  });
+
+  //Scroll reveal
+  window.sr = ScrollReveal({ });
+  sr.reveal('.scroll-reveal', { duration: 500, distance: '60px', viewOffset: { top: 0, right: 0, bottom: 170, left: 0 }});
+
+  //Hash tricks
+  if(window.location.hash == '#callback') {
+    $('.js-toggle-callback').click();
+  }
+  if(window.location.hash == '#test-channels-for-service-needs') {
+    $('.mixer__always-more').removeClass('hidden');
+  }
+});
+
+//SVG loader для тестирования, удалить на продакшене
+;( function( window, document )
+{
+    'use strict';
+
+    var file     = '/svg-inject.html',
+        revision = 2;
+
+    if( !document.createElementNS || !document.createElementNS( 'http://www.w3.org/2000/svg', 'svg' ).createSVGRect )
+        return true;
+
+    var isLocalStorage = 'localStorage' in window && window[ 'localStorage' ] !== null,
+        request,
+        data,
+        insertIT = function()
+        {
+            document.body.insertAdjacentHTML( 'afterbegin', data );
+        },
+        insert = function()
+        {
+            if( document.body ) insertIT();
+            else document.addEventListener( 'DOMContentLoaded', insertIT );
+        };
+
+    if( isLocalStorage && localStorage.getItem( 'inlineSVGrev' ) == revision )
+    {
+        data = localStorage.getItem( 'inlineSVGdata' );
+        if( data )
+        {
+            insert();
+            return true;
+        }
+    }
+    try
+    {
+        request = new XMLHttpRequest();
+        request.open( 'GET', file, true );
+        request.onload = function()
+        {
+            if( request.status >= 200 && request.status < 400 )
+            {
+                data = request.responseText;
+                insert();
+                if( isLocalStorage )
+                {
+                    localStorage.setItem( 'inlineSVGdata',  data );
+                    localStorage.setItem( 'inlineSVGrev',   revision );
+                }
+            }
+        }
+        request.send();
+    }
+    catch( e ){}
+}( window, document ) );
